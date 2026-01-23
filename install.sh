@@ -45,7 +45,6 @@ code --install-extension redhat.vscode-xml --force
 code --install-extension eriklynd.json-tools --force
 code --install-extension esbenp.prettier-vscode --force
 code --install-extension ms-azure-devops.azure-pipelines --force
-code --install-extension ms-vscode.azure-account --force
 code --install-extension redhat.vscode-yaml --force
 
 # -------------------------
@@ -100,8 +99,18 @@ source /etc/profile.d/maven.sh
 mvn -version
 
 # -------------------------
+# Azure DevOps configuration (required for artifacts)
+# -------------------------
+az devops configure --defaults organization=https://dev.azure.com/<YOUR_ORG>
+
+# -------------------------
 # Azure Artifacts (Maven)
 # -------------------------
-az artifacts login --tool maven || true
+if az artifacts --help >/dev/null 2>&1; then
+  az artifacts login --tool maven
+else
+  echo "⚠️ Azure Artifacts CLI not available (azure-devops extension missing?)"
+fi
+
 
 echo "✅ SDK installation completed successfully"
