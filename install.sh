@@ -25,8 +25,11 @@ az extension add --name azure-devops || true
 # VS Code extensions
 code --install-extension vscjava.vscode-java-pack --force
 code --install-extension redhat.vscode-xml --force
+code --install-extension vscode.json-language-features --force
+code --install-extension richie5um2.vscode-json-schemas --force
 code --install-extension ms-azure-devops.azure-pipelines --force
 code --install-extension ms-vscode.azure-account --force
+code --install-extension redhat.vscode-yaml --force
 
 # Maven
 sudo apt update
