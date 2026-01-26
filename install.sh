@@ -117,14 +117,11 @@ az devops configure --defaults organization=https://dev.azure.com/datasabai
 if az artifacts --help >/dev/null 2>&1; then
   echo "📦 Downloading latest Hubsabai VS Code extension from Azure Artifacts..."
   
-  # Lister toutes les versions et prendre la dernière
-  LATEST_VERSION=$(az artifacts universal list-versions \
-    --organization "https://dev.azure.com/datasabai/" \
-    --project "3cfd82fb-e192-45a2-bc79-bb40b999acec" \
-    --scope project \
-    --feed "hubsabai-vscode" \
-    --name "hubsabai-vscode-extension" \
-    --query "[-1].name" \
+  # Lister toutes les versions en utilisant l'API REST Azure DevOps
+  LATEST_VERSION=$(az rest \
+    --method GET \
+    --uri "https://feeds.dev.azure.com/datasabai/3cfd82fb-e192-45a2-bc79-bb40b999acec/_apis/packaging/feeds/hubsabai-vscode/packages/hubsabai-vscode-extension/versions?api-version=7.1-preview.1" \
+    --query "value[-1].version" \
     --output tsv 2>&1)
   
   # Vérifier si la commande a échoué (authentification ou autre erreur)
@@ -133,13 +130,10 @@ if az artifacts --help >/dev/null 2>&1; then
     az login
     
     # Réessayer après authentification
-    LATEST_VERSION=$(az artifacts universal list-versions \
-      --organization "https://dev.azure.com/datasabai/" \
-      --project "3cfd82fb-e192-45a2-bc79-bb40b999acec" \
-      --scope project \
-      --feed "hubsabai-vscode" \
-      --name "hubsabai-vscode-extension" \
-      --query "[-1].name" \
+    LATEST_VERSION=$(az rest \
+      --method GET \
+      --uri "https://feeds.dev.azure.com/datasabai/3cfd82fb-e192-45a2-bc79-bb40b999acec/_apis/packaging/feeds/hubsabai-vscode/packages/hubsabai-vscode-extension/versions?api-version=7.1-preview.1" \
+      --query "value[-1].version" \
       --output tsv 2>/dev/null || echo "")
   fi
   
