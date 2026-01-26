@@ -94,6 +94,8 @@ else
   echo "✅ Maven $MAVEN_VERSION already installed"
 fi
 
+# Supprimer l'ancien lien symbolique et créer le nouveau
+sudo rm -f /opt/maven
 sudo ln -sf "$MAVEN_DIR" /opt/maven
 
 sudo tee /etc/profile.d/maven.sh >/dev/null <<'EOF'
@@ -112,11 +114,7 @@ az devops configure --defaults organization=https://dev.azure.com/datasabai
 # -------------------------
 # Azure Artifacts (Maven)
 # -------------------------
-if az artifacts --help >/dev/null 2>&1; then
-  az artifacts login --tool maven
-else
-  echo "⚠️ Azure Artifacts CLI not available (azure-devops extension missing?)"
-fi
+echo "ℹ️ For Azure Artifacts authentication, run: az artifacts universal publish --help"
 
 
 echo "✅ SDK installation completed successfully"
