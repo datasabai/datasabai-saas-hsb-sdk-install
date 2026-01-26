@@ -114,12 +114,8 @@ az devops configure --defaults organization=https://dev.azure.com/datasabai
 # -------------------------
 # Azure Artifacts (Maven)
 # -------------------------
-if az artifacts --help >/dev/null 2>&1; then  # Vérifier si l'utilisateur est bien authentifié à Azure
-  if ! az account show >/dev/null 2>&1; then
-    echo "❌ Azure authentication required for downloading artifacts"
-    az login
-  fi
-    echo "� Downloading latest Hubsabai VS Code extension from Azure Artifacts..."
+if az artifacts --help >/dev/null 2>&1; then
+  echo "📦 Downloading latest Hubsabai VS Code extension from Azure Artifacts..."
   
   # Lister toutes les versions et prendre la dernière
   LATEST_VERSION=$(az artifacts universal list-versions \
@@ -129,7 +125,23 @@ if az artifacts --help >/dev/null 2>&1; then  # Vérifier si l'utilisateur est b
     --feed "hubsabai-vscode" \
     --name "hubsabai-vscode-extension" \
     --query "[-1].name" \
-    --output tsv 2>/dev/null || echo "")
+    --output tsv 2>&1)
+  
+  # Vérifier si la commande a échoué (authentification ou autre erreur)
+  if [ $? -ne 0 ] || [ -z "$LATEST_VERSION" ]; then
+    echo "⚠️ Authentication or permission error. Attempting Azure login..."
+    az login
+    
+    # Réessayer après authentification
+    LATEST_VERSION=$(az artifacts universal list-versions \
+      --organization "https://dev.azure.com/datasabai/" \
+      --project "3cfd82fb-e192-45a2-bc79-bb40b999acec" \
+      --scope project \
+      --feed "hubsabai-vscode" \
+      --name "hubsabai-vscode-extension" \
+      --query "[-1].name" \
+      --output tsv 2>/dev/null || echo "")
+  fi
   
   if [ -n "$LATEST_VERSION" ]; then
     echo "📥 Latest version found: $LATEST_VERSION"
@@ -156,6 +168,7 @@ if az artifacts --help >/dev/null 2>&1; then  # Vérifier si l'utilisateur est b
     rm -rf "$TEMP_DIR"
   else
     echo "⚠️ Could not retrieve latest version of hubsabai-vscode-extension"
+    echo "⚠️ Please check your Azure DevOps permissions for the hubsabai-vscode feed"
   fi
 else
   echo "⚠️ Azure Artifacts CLI not available (azure-devops extension missing?)"
