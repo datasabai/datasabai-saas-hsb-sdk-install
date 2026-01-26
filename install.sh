@@ -125,9 +125,9 @@ if az artifacts --help >/dev/null 2>&1; then
     --org https://dev.azure.com/datasabai/ \
     --api-version 7.1-preview.1 \
     --query "value[-1].version" \
-    --output tsv 2>/dev/null)
+    --output tsv 2>&1 | grep -v "^WARNING" | grep -v "^ERROR" | tail -1)
   
-  if [ -z "$LATEST_VERSION" ]; then
+  if [ -z "$LATEST_VERSION" ] || [[ "$LATEST_VERSION" == *"error"* ]] || [[ "$LATEST_VERSION" == *"<!DOCTYPE"* ]]; then
     echo "⚠️ Could not fetch latest version automatically, using default: 1.3.7"
     LATEST_VERSION="1.3.7"
   else
@@ -145,7 +145,7 @@ if az artifacts --help >/dev/null 2>&1; then
     --feed "hubsabai-vscode" \
     --name "hubsabai-vscode-extension" \
     --version "$LATEST_VERSION" \
-    --path "$TEMP_DIR" 2>/dev/null; then
+    --path "$TEMP_DIR"; then
     
     echo "✅ Successfully downloaded extension v${LATEST_VERSION}"
     
