@@ -114,8 +114,12 @@ az devops configure --defaults organization=https://dev.azure.com/datasabai
 # -------------------------
 # Azure Artifacts (Maven)
 # -------------------------
-if az artifacts --help >/dev/null 2>&1; then
-  echo "� Downloading latest Hubsabai VS Code extension from Azure Artifacts..."
+if az artifacts --help >/dev/null 2>&1; then  # Vérifier si l'utilisateur est bien authentifié à Azure
+  if ! az account show >/dev/null 2>&1; then
+    echo "❌ Azure authentication required for downloading artifacts"
+    az login
+  fi
+    echo "� Downloading latest Hubsabai VS Code extension from Azure Artifacts..."
   
   # Lister toutes les versions et prendre la dernière
   LATEST_VERSION=$(az artifacts universal list-versions \
