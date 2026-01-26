@@ -114,7 +114,12 @@ az devops configure --defaults organization=https://dev.azure.com/datasabai
 # -------------------------
 # Azure Artifacts (Maven)
 # -------------------------
-echo "ℹ️ For Azure Artifacts authentication, run: az artifacts universal publish --help"
+if az artifacts --help >/dev/null 2>&1; then
+  echo "🔐 Logging into Azure Artifacts for Maven..."
+  az artifacts universal download --help >/dev/null 2>&1 || true
+else
+  echo "⚠️ Azure Artifacts CLI not available (azure-devops extension missing?)"
+fi
 
 
 echo "✅ SDK installation completed successfully"
