@@ -123,9 +123,9 @@ if az artifacts --help >/dev/null 2>&1; then
     --resource versions \
     --route-parameters project=3cfd82fb-e192-45a2-bc79-bb40b999acec feedId=hubsabai-vscode packageId=hubsabai-vscode-extension \
     --org https://dev.azure.com/datasabai/ \
-    --api-version 7.1-preview.1 \
+    --api-version 7.1 \
     --query "value[-1].version" \
-    --output tsv 2>&1 | grep -v "^WARNING" | grep -v "^ERROR" | tail -1)
+    --output tsv 2>&1 | grep -v "^WARNING" | grep -v "^ERROR" | tail -1 || echo "")
   
   if [ -z "$LATEST_VERSION" ] || [[ "$LATEST_VERSION" == *"error"* ]] || [[ "$LATEST_VERSION" == *"<!DOCTYPE"* ]]; then
     echo "⚠️ Could not fetch latest version automatically, using default: 1.3.7"
