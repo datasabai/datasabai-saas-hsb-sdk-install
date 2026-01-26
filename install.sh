@@ -56,12 +56,14 @@ if ! java -version 2>&1 | grep -q "Temurin" || ! java -version 2>&1 | grep -q "2
   sudo apt update
   sudo apt install -y wget apt-transport-https gnupg ca-certificates
 
+  # Supprimer l'ancien fichier adoptium.list et la clé s'ils existent
+  sudo rm -f /etc/apt/sources.list.d/adoptium.list
+  sudo rm -f /etc/apt/keyrings/adoptium.gpg
+
   sudo mkdir -p /etc/apt/keyrings
   wget -qO- https://packages.adoptium.net/artifactory/api/gpg/key/public \
+    | gpg --dearmor \
     | sudo tee /etc/apt/keyrings/adoptium.gpg >/dev/null
-
-  # Supprimer l'ancien fichier adoptium.list s'il existe
-  sudo rm -f /etc/apt/sources.list.d/adoptium.list
 
   UBUNTU_CODENAME=$(lsb_release -cs)
   echo "deb [signed-by=/etc/apt/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb ${UBUNTU_CODENAME} main" \
