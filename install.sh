@@ -1,4 +1,4 @@
-l#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 echo "🚀 Company SDK bootstrap starting..."
@@ -50,7 +50,7 @@ code --install-extension redhat.vscode-yaml --force
 # -------------------------
 # Java 25 (Temurin)
 # -------------------------
-if ! java -version 2>&1 | grep -q "25"; then
+if ! java -version 2>&1 | grep -q "Temurin" || ! java -version 2>&1 | grep -q "25"; then
   echo "☕ Installing Java 25 (Temurin)..."
 
   sudo apt update
