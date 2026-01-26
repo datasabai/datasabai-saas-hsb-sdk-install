@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+l#!/usr/bin/env bash
 set -euo pipefail
 
 echo "🚀 Company SDK bootstrap starting..."
@@ -48,10 +48,10 @@ code --install-extension ms-azure-devops.azure-pipelines --force
 code --install-extension redhat.vscode-yaml --force
 
 # -------------------------
-# Java 21 (Temurin)
+# Java 25 (Temurin)
 # -------------------------
-if ! java -version 2>&1 | grep -q "21"; then
-  echo "☕ Installing Java 21 (Temurin)..."
+if ! java -version 2>&1 | grep -q "25"; then
+  echo "☕ Installing Java 25 (Temurin)..."
 
   sudo apt update
   sudo apt install -y wget apt-transport-https gnupg ca-certificates
@@ -64,12 +64,12 @@ if ! java -version 2>&1 | grep -q "21"; then
     | sudo tee /etc/apt/sources.list.d/adoptium.list
 
   sudo apt update
-  sudo apt install -y temurin-21-jdk
+  sudo apt install -y temurin-25-jdk
 
-  sudo update-alternatives --set java /usr/lib/jvm/temurin-21-jdk-amd64/bin/java
-  sudo update-alternatives --set javac /usr/lib/jvm/temurin-21-jdk-amd64/bin/javac
+  sudo update-alternatives --set java /usr/lib/jvm/temurin-25-jdk-amd64/bin/java
+  sudo update-alternatives --set javac /usr/lib/jvm/temurin-25-jdk-amd64/bin/javac
 else
-  echo "✅ Java 21 already installed"
+  echo "✅ Java 25 already installed"
 fi
 
 java -version
@@ -77,7 +77,7 @@ java -version
 # -------------------------
 # Maven 3.9+
 # -------------------------
-MAVEN_VERSION=3.9.6
+MAVEN_VERSION=3.9.12
 MAVEN_DIR=/opt/apache-maven-${MAVEN_VERSION}
 
 if [ ! -d "$MAVEN_DIR" ]; then
@@ -101,7 +101,7 @@ mvn -version
 # -------------------------
 # Azure DevOps configuration (required for artifacts)
 # -------------------------
-az devops configure --defaults organization=https://dev.azure.com/<YOUR_ORG>
+az devops configure --defaults organization=https://dev.azure.com/datasabai
 
 # -------------------------
 # Azure Artifacts (Maven)
