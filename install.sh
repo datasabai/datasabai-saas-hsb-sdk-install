@@ -115,8 +115,44 @@ az devops configure --defaults organization=https://dev.azure.com/datasabai
 # Azure Artifacts (Maven)
 # -------------------------
 if az artifacts --help >/dev/null 2>&1; then
-  echo "🔐 Logging into Azure Artifacts for Maven..."
-  az artifacts universal download --help >/dev/null 2>&1 || true
+  echo "� Downloading latest Hubsabai VS Code extension from Azure Artifacts..."
+  
+  # Lister toutes les versions et prendre la dernière
+  LATEST_VERSION=$(az artifacts universal list-versions \
+    --organization "https://dev.azure.com/datasabai/" \
+    --project "3cfd82fb-e192-45a2-bc79-bb40b999acec" \
+    --scope project \
+    --feed "hubsabai-vscode" \
+    --name "hubsabai-vscode-extension" \
+    --query "[-1].name" \
+    --output tsv 2>/dev/null || echo "")
+  
+  if [ -n "$LATEST_VERSION" ]; then
+    echo "📥 Latest version found: $LATEST_VERSION"
+    
+    # Télécharger l'extension
+    TEMP_DIR=$(mktemp -d)
+    az artifacts universal download \
+      --organization "https://dev.azure.com/datasabai/" \
+      --project "3cfd82fb-e192-45a2-bc79-bb40b999acec" \
+      --scope project \
+      --feed "hubsabai-vscode" \
+      --name "hubsabai-vscode-extension" \
+      --version "$LATEST_VERSION" \
+      --path "$TEMP_DIR"
+    
+    # Installer l'extension VS Code si un fichier .vsix est trouvé
+    if ls "$TEMP_DIR"/*.vsix >/dev/null 2>&1; then
+      for vsix in "$TEMP_DIR"/*.vsix; do
+        echo "📦 Installing VS Code extension: $(basename "$vsix")"
+        code --install-extension "$vsix" --force
+      done
+    fi
+    
+    rm -rf "$TEMP_DIR"
+  else
+    echo "⚠️ Could not retrieve latest version of hubsabai-vscode-extension"
+  fi
 else
   echo "⚠️ Azure Artifacts CLI not available (azure-devops extension missing?)"
 fi
