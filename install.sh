@@ -112,44 +112,26 @@ mvn -version
 az devops configure --defaults organization=https://dev.azure.com/datasabai
 
 # -------------------------
-# Azure Artifacts (Maven)
+# Azure Artifacts - Hubsabai VS Code Extension
 # -------------------------
+# Version de l'extension (à mettre à jour manuellement)
+VSIX_VERSION="${HUBSABAI_VSIX_VERSION:-1.3.7}"
+
 if az artifacts --help >/dev/null 2>&1; then
-  echo "📦 Downloading latest Hubsabai VS Code extension from Azure Artifacts..."
+  echo "📦 Downloading Hubsabai VS Code extension v${VSIX_VERSION} from Azure Artifacts..."
   
-  # Lister toutes les versions en utilisant l'API REST Azure DevOps
-  LATEST_VERSION=$(az rest \
-    --method GET \
-    --uri "https://feeds.dev.azure.com/datasabai/3cfd82fb-e192-45a2-bc79-bb40b999acec/_apis/packaging/feeds/hubsabai-vscode/packages/hubsabai-vscode-extension/versions?api-version=7.1-preview.1" \
-    --query "value[-1].version" \
-    --output tsv 2>&1)
+  TEMP_DIR=$(mktemp -d)
   
-  # Vérifier si la commande a échoué (authentification ou autre erreur)
-  if [ $? -ne 0 ] || [ -z "$LATEST_VERSION" ]; then
-    echo "⚠️ Authentication or permission error. Attempting Azure login..."
-    az login
+  if az artifacts universal download \
+    --organization "https://dev.azure.com/datasabai/" \
+    --project "3cfd82fb-e192-45a2-bc79-bb40b999acec" \
+    --scope project \
+    --feed "hubsabai-vscode" \
+    --name "hubsabai-vscode-extension" \
+    --version "$VSIX_VERSION" \
+    --path "$TEMP_DIR" 2>/dev/null; then
     
-    # Réessayer après authentification
-    LATEST_VERSION=$(az rest \
-      --method GET \
-      --uri "https://feeds.dev.azure.com/datasabai/3cfd82fb-e192-45a2-bc79-bb40b999acec/_apis/packaging/feeds/hubsabai-vscode/packages/hubsabai-vscode-extension/versions?api-version=7.1-preview.1" \
-      --query "value[-1].version" \
-      --output tsv 2>/dev/null || echo "")
-  fi
-  
-  if [ -n "$LATEST_VERSION" ]; then
-    echo "📥 Latest version found: $LATEST_VERSION"
-    
-    # Télécharger l'extension
-    TEMP_DIR=$(mktemp -d)
-    az artifacts universal download \
-      --organization "https://dev.azure.com/datasabai/" \
-      --project "3cfd82fb-e192-45a2-bc79-bb40b999acec" \
-      --scope project \
-      --feed "hubsabai-vscode" \
-      --name "hubsabai-vscode-extension" \
-      --version "$LATEST_VERSION" \
-      --path "$TEMP_DIR"
+    echo "✅ Successfully downloaded extension v${VSIX_VERSION}"
     
     # Installer l'extension VS Code si un fichier .vsix est trouvé
     if ls "$TEMP_DIR"/*.vsix >/dev/null 2>&1; then
@@ -158,12 +140,13 @@ if az artifacts --help >/dev/null 2>&1; then
         code --install-extension "$vsix" --force
       done
     fi
-    
-    rm -rf "$TEMP_DIR"
   else
-    echo "⚠️ Could not retrieve latest version of hubsabai-vscode-extension"
-    echo "⚠️ Please check your Azure DevOps permissions for the hubsabai-vscode feed"
+    echo "⚠️ Failed to download extension v${VSIX_VERSION}"
+    echo "💡 Tip: Set HUBSABAI_VSIX_VERSION environment variable to use a different version"
+    echo "💡 Example: HUBSABAI_VSIX_VERSION=1.3.8 bash install.sh"
   fi
+  
+  rm -rf "$TEMP_DIR"
 else
   echo "⚠️ Azure Artifacts CLI not available (azure-devops extension missing?)"
 fi
