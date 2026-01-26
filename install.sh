@@ -121,5 +121,4 @@ else
   echo "⚠️ Azure Artifacts CLI not available (azure-devops extension missing?)"
 fi
 
-
 echo "✅ SDK installation completed successfully"
