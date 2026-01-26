@@ -114,11 +114,27 @@ az devops configure --defaults organization=https://dev.azure.com/datasabai
 # -------------------------
 # Azure Artifacts - Hubsabai VS Code Extension
 # -------------------------
-# Version de l'extension (à mettre à jour manuellement)
-VSIX_VERSION="${HUBSABAI_VSIX_VERSION:-1.3.7}"
-
 if az artifacts --help >/dev/null 2>&1; then
-  echo "📦 Downloading Hubsabai VS Code extension v${VSIX_VERSION} from Azure Artifacts..."
+  echo "📦 Fetching latest Hubsabai VS Code extension version..."
+  
+  # Utiliser az devops invoke pour récupérer les versions via l'API REST
+  LATEST_VERSION=$(az devops invoke \
+    --area packaging \
+    --resource versions \
+    --route-parameters project=3cfd82fb-e192-45a2-bc79-bb40b999acec feedId=hubsabai-vscode packageId=hubsabai-vscode-extension \
+    --org https://dev.azure.com/datasabai/ \
+    --api-version 7.1-preview.1 \
+    --query "value[-1].version" \
+    --output tsv 2>/dev/null)
+  
+  if [ -z "$LATEST_VERSION" ]; then
+    echo "⚠️ Could not fetch latest version automatically, using default: 1.3.7"
+    LATEST_VERSION="1.3.7"
+  else
+    echo "✅ Latest version found: $LATEST_VERSION"
+  fi
+  
+  echo "📥 Downloading Hubsabai VS Code extension v${LATEST_VERSION}..."
   
   TEMP_DIR=$(mktemp -d)
   
@@ -128,10 +144,10 @@ if az artifacts --help >/dev/null 2>&1; then
     --scope project \
     --feed "hubsabai-vscode" \
     --name "hubsabai-vscode-extension" \
-    --version "$VSIX_VERSION" \
+    --version "$LATEST_VERSION" \
     --path "$TEMP_DIR" 2>/dev/null; then
     
-    echo "✅ Successfully downloaded extension v${VSIX_VERSION}"
+    echo "✅ Successfully downloaded extension v${LATEST_VERSION}"
     
     # Installer l'extension VS Code si un fichier .vsix est trouvé
     if ls "$TEMP_DIR"/*.vsix >/dev/null 2>&1; then
@@ -141,9 +157,7 @@ if az artifacts --help >/dev/null 2>&1; then
       done
     fi
   else
-    echo "⚠️ Failed to download extension v${VSIX_VERSION}"
-    echo "💡 Tip: Set HUBSABAI_VSIX_VERSION environment variable to use a different version"
-    echo "💡 Example: HUBSABAI_VSIX_VERSION=1.3.8 bash install.sh"
+    echo "⚠️ Failed to download extension v${LATEST_VERSION}"
   fi
   
   rm -rf "$TEMP_DIR"
