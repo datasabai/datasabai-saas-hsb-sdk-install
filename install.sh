@@ -60,6 +60,9 @@ if ! java -version 2>&1 | grep -q "Temurin" || ! java -version 2>&1 | grep -q "2
   wget -qO- https://packages.adoptium.net/artifactory/api/gpg/key/public \
     | sudo tee /etc/apt/keyrings/adoptium.gpg >/dev/null
 
+  # Supprimer l'ancien fichier adoptium.list s'il existe
+  sudo rm -f /etc/apt/sources.list.d/adoptium.list
+
   UBUNTU_CODENAME=$(lsb_release -cs)
   echo "deb [signed-by=/etc/apt/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb ${UBUNTU_CODENAME} main" \
     | sudo tee /etc/apt/sources.list.d/adoptium.list
