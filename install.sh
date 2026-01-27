@@ -239,6 +239,26 @@ if [ -n "$AZURE_DEVOPS_PAT" ]; then
       <password>${AZURE_DEVOPS_PAT}</password>
     </server>
   </servers>
+  <profiles>
+    <profile>
+      <id>azure-artifacts</id>
+      <repositories>
+        <repository>
+          <id>hubsabai-maven</id>
+          <url>https://pkgs.dev.azure.com/datasabai/Hubsabai/_packaging/hubsabai-maven/maven/v1</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+  <activeProfiles>
+    <activeProfile>azure-artifacts</activeProfile>
+  </activeProfiles>
 </settings>
 EOF
 
@@ -249,7 +269,6 @@ EOF
   mvn dependency:copy \
     -Dartifact=com.datasabai.hsb:sdk-app:1.0.0-SNAPSHOT \
     -DoutputDirectory="$BIN_DIR" \
-    -DremoteRepositories=hubsabai-maven::::https://pkgs.dev.azure.com/datasabai/Hubsabai/_packaging/hubsabai-maven/maven/v1 \
     -s "$MAVEN_SETTINGS"
   
   if [ $? -eq 0 ]; then
