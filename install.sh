@@ -289,21 +289,32 @@ if az account show >/dev/null 2>&1; then
       --route-parameters feedId="$FEED_ID" packageId="$SDK_PACKAGE_ID" \
       --org https://dev.azure.com/datasabai/ \
       --api-version 7.1 \
-      --query "value[0].normalizedVersion" \
+      --query "value[0].version" \
       --output tsv 2>/dev/null)
     
     echo "✅ Latest sdk-app version: $SDK_VERSION"
-    echo "📥 Downloading sdk-app-${SDK_VERSION}-runner.jar..."
     
-    curl -u ":$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken --output tsv)" \
-      "https://pkgs.dev.azure.com/datasabai/_apis/packaging/feeds/$FEED_ID/maven/com.datasabai.hsb/sdk-app/$SDK_VERSION/sdk-app-${SDK_VERSION}-runner.jar/content" \
-      -o "$BIN_DIR/sdk-app-${SDK_VERSION}-runner.jar" \
-      -L -s -f
+    # Récupérer les métadonnées Maven pour obtenir le timestamp exact du SNAPSHOT
+    TOKEN=$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken --output tsv)
+    MAVEN_METADATA=$(curl -u ":$TOKEN" "https://pkgs.dev.azure.com/datasabai/_packaging/hubsabai-maven/maven/v1/com/datasabai/hsb/sdk-app/$SDK_VERSION/maven-metadata.xml" -s)
     
-    if [ $? -eq 0 ]; then
-      echo "✅ sdk-app downloaded to $BIN_DIR"
+    SNAPSHOT_VALUE=$(echo "$MAVEN_METADATA" | grep -A 1 '<classifier>runner</classifier>' | grep '<value>' | sed 's/.*<value>\(.*\)<\/value>.*/\1/')
+    
+    if [ -n "$SNAPSHOT_VALUE" ]; then
+      echo "📥 Downloading sdk-app-${SNAPSHOT_VALUE}-runner.jar..."
+      
+      curl -u ":$TOKEN" \
+        "https://pkgs.dev.azure.com/datasabai/_apis/packaging/feeds/$FEED_ID/maven/com.datasabai.hsb/sdk-app/$SDK_VERSION/sdk-app-${SNAPSHOT_VALUE}-runner.jar/content" \
+        -o "$BIN_DIR/sdk-app-${SNAPSHOT_VALUE}-runner.jar" \
+        -L -s -f
+      
+      if [ $? -eq 0 ]; then
+        echo "✅ sdk-app downloaded to $BIN_DIR"
+      else
+        echo "⚠️ Failed to download sdk-app"
+      fi
     else
-      echo "⚠️ Failed to download sdk-app"
+      echo "⚠️ Could not determine SNAPSHOT version"
     fi
   else
     echo "⚠️ Could not find sdk-app package"
