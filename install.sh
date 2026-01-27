@@ -201,4 +201,69 @@ else
   echo "⚠️ Azure Artifacts CLI not available (azure-devops extension missing?)"
 fi
 
+# -------------------------
+# Download Hubsabai JAR artifacts
+# -------------------------
+echo "📦 Downloading Hubsabai JAR artifacts..."
+
+# Créer le répertoire bin dans le projet hubsabai
+BIN_DIR="$REPO_DIR/bin"
+mkdir -p "$BIN_DIR"
+
+# Configurer Maven pour Azure Artifacts
+MAVEN_SETTINGS="$HOME/.m2/settings.xml"
+mkdir -p "$HOME/.m2"
+
+# Générer un PAT (Personal Access Token) depuis Azure CLI
+AZURE_DEVOPS_PAT=$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken --output tsv)
+
+if [ -n "$AZURE_DEVOPS_PAT" ]; then
+  # Créer/Mettre à jour settings.xml avec les credentials Azure Artifacts
+  cat > "$MAVEN_SETTINGS" <<EOF
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+  <servers>
+    <server>
+      <id>hubsabai-maven</id>
+      <username>datasabai</username>
+      <password>${AZURE_DEVOPS_PAT}</password>
+    </server>
+  </servers>
+</settings>
+EOF
+
+  echo "✅ Maven settings configured for Azure Artifacts"
+  
+  # Télécharger sdk-app JAR
+  echo "📥 Downloading sdk-app 1.0.0-SNAPSHOT..."
+  mvn dependency:copy \
+    -Dartifact=com.datasabai.hsb:sdk-app:1.0.0-SNAPSHOT \
+    -DoutputDirectory="$BIN_DIR" \
+    -DremoteRepositories=hubsabai-maven::::https://pkgs.dev.azure.com/datasabai/Hubsabai/_packaging/hubsabai-maven/maven/v1 \
+    -s "$MAVEN_SETTINGS" >/dev/null 2>&1
+  
+  if [ $? -eq 0 ]; then
+    echo "✅ sdk-app downloaded to $BIN_DIR"
+  else
+    echo "⚠️ Failed to download sdk-app"
+  fi
+  
+  # Télécharger integration-engine-light JAR
+  echo "📥 Downloading integration-engine-light 1.0.1..."
+  mvn dependency:copy \
+    -Dartifact=com.datasabai.hsb:integration-engine-light:1.0.1 \
+    -DoutputDirectory="$BIN_DIR" \
+    -DremoteRepositories=hubsabai-maven::::https://pkgs.dev.azure.com/datasabai/Hubsabai/_packaging/hubsabai-maven/maven/v1 \
+    -s "$MAVEN_SETTINGS" >/dev/null 2>&1
+  
+  if [ $? -eq 0 ]; then
+    echo "✅ integration-engine-light downloaded to $BIN_DIR"
+  else
+    echo "⚠️ Failed to download integration-engine-light"
+  fi
+else
+  echo "⚠️ Could not get Azure DevOps access token for Maven"
+fi
+
 echo "✅ SDK installation completed successfully"
