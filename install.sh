@@ -255,7 +255,7 @@ if [ -n "$AZURE_DEVOPS_PAT" ]; then
       <repositories>
         <repository>
           <id>hubsabai-maven</id>
-          <url>https://pkgs.dev.azure.com/datasabai/_packaging/hubsabai-maven/maven/v1</url>
+          <url>https://pkgs.dev.azure.com/datasabai/Hubsabai/_packaging/hubsabai-maven/maven/v1</url>
           <releases>
             <enabled>true</enabled>
           </releases>
