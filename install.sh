@@ -256,25 +256,11 @@ if az account show >/dev/null 2>&1; then
       --output tsv 2>/dev/null)
     
     echo "✅ Latest integration-engine-light version: $IEL_VERSION"
-    
-    IEL_JAR_VERSION=""
-    
-    # Pour les SNAPSHOT, récupérer le timestamp exact depuis maven-metadata.xml
-    if [[ "$IEL_VERSION" == *"SNAPSHOT"* ]]; then
-      MAVEN_METADATA=$(curl -u ":$TOKEN" "https://pkgs.dev.azure.com/datasabai/_packaging/hubsabai-maven/maven/v1/com/datasabai/hsb/integration-engine-light/$IEL_VERSION/maven-metadata.xml" -s 2>/dev/null)
-      IEL_JAR_VERSION=$(echo "$MAVEN_METADATA" | grep -A 2 '<classifier>runner</classifier>' | grep '<value>' | sed 's/.*<value>\(.*\)<\/value>.*/\1/' | head -1)
-    fi
-    
-    # Si pas de version spéciale trouvée, utiliser la version normale
-    if [ -z "$IEL_JAR_VERSION" ]; then
-      IEL_JAR_VERSION="$IEL_VERSION"
-    fi
-    
-    echo "📥 Downloading integration-engine-light-${IEL_JAR_VERSION}-runner.jar..."
+    echo "📥 Downloading integration-engine-light-${IEL_VERSION}-runner.jar..."
     
     curl -u ":$TOKEN" \
-      "https://pkgs.dev.azure.com/datasabai/_apis/packaging/feeds/$FEED_ID/maven/com.datasabai.hsb/integration-engine-light/$IEL_VERSION/integration-engine-light-${IEL_JAR_VERSION}-runner.jar/content" \
-      -o "$BIN_DIR/integration-engine-light-${IEL_JAR_VERSION}-runner.jar" \
+      "https://pkgs.dev.azure.com/datasabai/_apis/packaging/feeds/$FEED_ID/maven/com.datasabai.hsb/integration-engine-light/$IEL_VERSION/integration-engine-light-${IEL_VERSION}-runner.jar/content" \
+      -o "$BIN_DIR/integration-engine-light-${IEL_VERSION}-runner.jar" \
       -L -s -f
     
     if [ $? -eq 0 ]; then
@@ -308,25 +294,11 @@ if az account show >/dev/null 2>&1; then
       --output tsv 2>/dev/null)
     
     echo "✅ Latest sdk-app version: $SDK_VERSION"
-    
-    SDK_JAR_VERSION=""
-    
-    # Pour les SNAPSHOT, récupérer le timestamp exact depuis maven-metadata.xml
-    if [[ "$SDK_VERSION" == *"SNAPSHOT"* ]]; then
-      MAVEN_METADATA=$(curl -u ":$TOKEN" "https://pkgs.dev.azure.com/datasabai/_packaging/hubsabai-maven/maven/v1/com/datasabai/hsb/sdk-app/$SDK_VERSION/maven-metadata.xml" -s 2>/dev/null)
-      SDK_JAR_VERSION=$(echo "$MAVEN_METADATA" | grep -A 2 '<classifier>runner</classifier>' | grep '<value>' | sed 's/.*<value>\(.*\)<\/value>.*/\1/' | head -1)
-    fi
-    
-    # Si pas de version spéciale trouvée, utiliser la version normale
-    if [ -z "$SDK_JAR_VERSION" ]; then
-      SDK_JAR_VERSION="$SDK_VERSION"
-    fi
-    
-    echo "📥 Downloading sdk-app-${SDK_JAR_VERSION}-runner.jar..."
+    echo "📥 Downloading sdk-app-${SDK_VERSION}-runner.jar..."
     
     curl -u ":$TOKEN" \
-      "https://pkgs.dev.azure.com/datasabai/_apis/packaging/feeds/$FEED_ID/maven/com.datasabai.hsb/sdk-app/$SDK_VERSION/sdk-app-${SDK_JAR_VERSION}-runner.jar/content" \
-      -o "$BIN_DIR/sdk-app-${SDK_JAR_VERSION}-runner.jar" \
+      "https://pkgs.dev.azure.com/datasabai/_apis/packaging/feeds/$FEED_ID/maven/com.datasabai.hsb/sdk-app/$SDK_VERSION/sdk-app-${SDK_VERSION}-runner.jar/content" \
+      -o "$BIN_DIR/sdk-app-${SDK_VERSION}-runner.jar" \
       -L -s -f
     
     if [ $? -eq 0 ]; then
