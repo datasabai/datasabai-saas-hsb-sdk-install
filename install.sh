@@ -257,6 +257,8 @@ if az account show >/dev/null 2>&1; then
     
     echo "✅ Latest integration-engine-light version: $IEL_VERSION"
     
+    IEL_JAR_VERSION=""
+    
     # Pour les SNAPSHOT, récupérer le timestamp exact depuis maven-metadata.xml
     if [[ "$IEL_VERSION" == *"SNAPSHOT"* ]]; then
       MAVEN_METADATA=$(curl -u ":$TOKEN" "https://pkgs.dev.azure.com/datasabai/_packaging/hubsabai-maven/maven/v1/com/datasabai/hsb/integration-engine-light/$IEL_VERSION/maven-metadata.xml" -s 2>/dev/null)
@@ -306,6 +308,8 @@ if az account show >/dev/null 2>&1; then
       --output tsv 2>/dev/null)
     
     echo "✅ Latest sdk-app version: $SDK_VERSION"
+    
+    SDK_JAR_VERSION=""
     
     # Pour les SNAPSHOT, récupérer le timestamp exact depuis maven-metadata.xml
     if [[ "$SDK_VERSION" == *"SNAPSHOT"* ]]; then
