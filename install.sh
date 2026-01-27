@@ -36,6 +36,15 @@ fi
 az extension add --name azure-devops >/dev/null 2>&1 || true
 
 # -------------------------
+# Git - Latest Version
+# -------------------------
+echo "📦 Updating Git to latest version..."
+sudo add-apt-repository ppa:git-core/ppa -y >/dev/null 2>&1
+sudo apt update >/dev/null 2>&1
+sudo apt install -y git >/dev/null 2>&1
+echo "✅ Git updated: $(git --version)"
+
+# -------------------------
 # VS Code extensions
 # -------------------------
 echo "📦 Installing VS Code extensions..."
@@ -161,7 +170,7 @@ if az artifacts --help >/dev/null 2>&1; then
     --org https://dev.azure.com/datasabai/ \
     --api-version 7.1 \
     --query "value[-1].version" \
-    --output tsv 2>&1 | grep -v "^WARNING" | grep -v "^ERROR" | tail -1 || echo "")
+    --output tsv 2>&1 | grep -v "^WARNING" | grep -v "^ERROR" | grep -v "^could not convert" | tail -1 || echo "")
   
   if [ -z "$LATEST_VERSION" ] || [[ "$LATEST_VERSION" == *"error"* ]] || [[ "$LATEST_VERSION" == *"<!DOCTYPE"* ]]; then
     echo "⚠️ Could not fetch latest version automatically, using default: 1.3.7"
@@ -241,7 +250,7 @@ EOF
     -Dartifact=com.datasabai.hsb:sdk-app:1.0.0-SNAPSHOT \
     -DoutputDirectory="$BIN_DIR" \
     -DremoteRepositories=hubsabai-maven::::https://pkgs.dev.azure.com/datasabai/Hubsabai/_packaging/hubsabai-maven/maven/v1 \
-    -s "$MAVEN_SETTINGS" >/dev/null 2>&1
+    -s "$MAVEN_SETTINGS"
   
   if [ $? -eq 0 ]; then
     echo "✅ sdk-app downloaded to $BIN_DIR"
@@ -254,6 +263,8 @@ EOF
   mvn dependency:copy \
     -Dartifact=com.datasabai.hsb:integration-engine-light:1.0.1 \
     -DoutputDirectory="$BIN_DIR" \
+    -DremoteRepositories=hubsabai-maven::::https://pkgs.dev.azure.com/datasabai/Hubsabai/_packaging/hubsabai-maven/maven/v1 \
+    -s "$MAVEN_SETTINGS" \
     -DremoteRepositories=hubsabai-maven::::https://pkgs.dev.azure.com/datasabai/Hubsabai/_packaging/hubsabai-maven/maven/v1 \
     -s "$MAVEN_SETTINGS" >/dev/null 2>&1
   
