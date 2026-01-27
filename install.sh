@@ -162,21 +162,31 @@ fi
 if az artifacts --help >/dev/null 2>&1; then
   echo "📦 Fetching latest Hubsabai VS Code extension version..."
   
-  # Utiliser az devops invoke pour récupérer les versions via l'API REST
-  LATEST_VERSION=$(az devops invoke \
+  # Récupérer le GUID du package
+  PACKAGE_ID=$(az devops invoke \
     --area packaging \
-    --resource versions \
-    --route-parameters project=3cfd82fb-e192-45a2-bc79-bb40b999acec feedId=hubsabai-vscode packageId=hubsabai-vscode-extension \
+    --resource packages \
+    --route-parameters project=3cfd82fb-e192-45a2-bc79-bb40b999acec feedId=hubsabai-vscode protocolType=UPack \
     --org https://dev.azure.com/datasabai/ \
     --api-version 7.1 \
-    --query "value[-1].version" \
-    --output tsv 2>&1 | grep -v "^WARNING" | grep -v "^ERROR" | grep -v "^could not convert" | tail -1 || echo "")
+    --query "value[?name=='hubsabai-vscode-extension'].id" \
+    --output tsv 2>&1)
   
-  if [ -z "$LATEST_VERSION" ] || [[ "$LATEST_VERSION" == *"error"* ]] || [[ "$LATEST_VERSION" == *"<!DOCTYPE"* ]]; then
-    echo "⚠️ Could not fetch latest version automatically, using default: 1.3.7"
-    LATEST_VERSION="1.3.7"
-  else
+  if [ -n "$PACKAGE_ID" ]; then
+    # Récupérer la dernière version avec le GUID
+    LATEST_VERSION=$(az devops invoke \
+      --area packaging \
+      --resource versions \
+      --route-parameters project=3cfd82fb-e192-45a2-bc79-bb40b999acec feedId=hubsabai-vscode packageId="$PACKAGE_ID" \
+      --org https://dev.azure.com/datasabai/ \
+      --api-version 7.1 \
+      --query "value[0].version" \
+      --output tsv 2>&1)
+    
     echo "✅ Latest version found: $LATEST_VERSION"
+  else
+    echo "⚠️ Could not fetch package ID, using default version: 1.3.7"
+    LATEST_VERSION="1.3.7"
   fi
   
   echo "📥 Downloading Hubsabai VS Code extension v${LATEST_VERSION}..."
