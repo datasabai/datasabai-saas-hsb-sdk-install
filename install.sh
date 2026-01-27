@@ -112,6 +112,26 @@ mvn -version
 az devops configure --defaults organization=https://dev.azure.com/datasabai
 
 # -------------------------
+# Clone Hubsabai Distribution Repository
+# -------------------------
+REPO_URL="https://Datasabai@dev.azure.com/datasabai/Hubsabai/_git/hubsabai-distribution"
+REPO_DIR="$HOME/hubsabai-distribution"
+
+if [ -d "$REPO_DIR" ]; then
+  echo "📁 Hubsabai distribution folder already exists at $REPO_DIR"
+  echo "🔄 Pulling latest changes..."
+  cd "$REPO_DIR" && git pull
+else
+  echo "📦 Cloning Hubsabai distribution repository..."
+  git clone "$REPO_URL" "$REPO_DIR"
+  if [ $? -eq 0 ]; then
+    echo "✅ Repository cloned successfully to $REPO_DIR"
+  else
+    echo "⚠️ Failed to clone repository. You may need to authenticate."
+  fi
+fi
+
+# -------------------------
 # Azure Artifacts - Hubsabai VS Code Extension
 # -------------------------
 if az artifacts --help >/dev/null 2>&1; then
