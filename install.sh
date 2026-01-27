@@ -172,8 +172,8 @@ if az artifacts --help >/dev/null 2>&1; then
   
   echo "📥 Downloading Hubsabai VS Code extension v${LATEST_VERSION}..."
   
-  # Créer le répertoire vscode dans le projet hubsabai
-  VSCODE_DIR="$REPO_DIR/vscode"
+  # Créer le répertoire .vscode dans le projet hubsabai
+  VSCODE_DIR="$REPO_DIR/.vscode"
   mkdir -p "$VSCODE_DIR"
   
   if az artifacts universal download \
