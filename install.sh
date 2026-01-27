@@ -314,3 +314,11 @@ else
 fi
 
 echo "✅ SDK installation completed successfully"
+
+# Ouvrir VS Code sur le dossier hubsabai
+if command -v code >/dev/null 2>&1; then
+  echo "📂 Opening VS Code with hubsabai workspace..."
+  code "$REPO_DIR"
+else
+  echo "⚠️ VS Code command 'code' not found in PATH"
+fi
