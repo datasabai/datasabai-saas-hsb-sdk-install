@@ -226,8 +226,7 @@ fi
 echo "📦 Downloading Hubsabai JAR artifacts..."
 
 # Créer le répertoire bin dans le projet hubsabai
-BIN_DIR="$REPO_DIR/Bin"
-mkdir -p "$BIN_DIR"
+BIN_DIR="$REPO_DIR/bin"
 
 FEED_ID="a89d4db8-e3e5-4e77-b8df-e7550fcb10c6"
 
