@@ -112,23 +112,39 @@ mvn -version
 az devops configure --defaults organization=https://dev.azure.com/datasabai
 
 # -------------------------
-# Clone Hubsabai Distribution Repository
+# Clone Hubsabai Distribution Repository (skeleton structure)
 # -------------------------
-REPO_URL="https://Datasabai@dev.azure.com/datasabai/Hubsabai/_git/hubsabai-distribution"
-REPO_DIR="$HOME/hubsabai-distribution"
+REPO_URL="https://dev.azure.com/datasabai/Hubsabai/_git/hubsabai-distribution"
+REPO_DIR="$HOME/hubsabai"
 
-if [ -d "$REPO_DIR" ]; then
-  echo "📁 Hubsabai distribution folder already exists at $REPO_DIR"
-  echo "🔄 Pulling latest changes..."
-  cd "$REPO_DIR" && git pull
-else
-  echo "📦 Cloning Hubsabai distribution repository..."
-  git clone "$REPO_URL" "$REPO_DIR"
-  if [ $? -eq 0 ]; then
-    echo "✅ Repository cloned successfully to $REPO_DIR"
+if [ ! -d "$REPO_DIR" ]; then
+  echo "📦 Cloning Hubsabai distribution repository skeleton..."
+  
+  # Configurer Git pour utiliser Azure DevOps credential helper
+  git config --global credential.helper store
+  
+  # Obtenir un token d'accès depuis Azure CLI
+  AZURE_DEVOPS_TOKEN=$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken --output tsv)
+  
+  if [ -n "$AZURE_DEVOPS_TOKEN" ]; then
+    # Cloner avec le token dans l'URL
+    git clone "https://token:${AZURE_DEVOPS_TOKEN}@dev.azure.com/datasabai/Hubsabai/_git/hubsabai-distribution" "$REPO_DIR"
+    
+    if [ $? -eq 0 ]; then
+      echo "✅ Repository skeleton cloned successfully to $REPO_DIR"
+      
+      # Supprimer le dossier .git pour désynchroniser (c'est juste un squelette)
+      echo "🔓 Removing Git tracking (this is a skeleton, not for commits)..."
+      rm -rf "$REPO_DIR/.git"
+      echo "✅ Repository desynchronized - ready for development"
+    else
+      echo "⚠️ Failed to clone repository"
+    fi
   else
-    echo "⚠️ Failed to clone repository. You may need to authenticate."
+    echo "⚠️ Could not get Azure DevOps access token"
   fi
+else
+  echo "✅ Hubsabai development folder already exists at $REPO_DIR"
 fi
 
 # -------------------------
