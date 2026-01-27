@@ -257,10 +257,13 @@ if az account show >/dev/null 2>&1; then
     
     echo "✅ Latest integration-engine-light version: $IEL_VERSION"
     
-    # Récupérer le nom exact du fichier depuis maven-metadata.xml
-    MAVEN_METADATA=$(curl -u ":$TOKEN" "https://pkgs.dev.azure.com/datasabai/_packaging/hubsabai-maven/maven/v1/com/datasabai/hsb/integration-engine-light/$IEL_VERSION/maven-metadata.xml" -s 2>/dev/null)
-    IEL_JAR_VERSION=$(echo "$MAVEN_METADATA" | grep -A 2 '<classifier>runner</classifier>' | grep '<value>' | sed 's/.*<value>\(.*\)<\/value>.*/\1/' | head -1)
+    # Pour les SNAPSHOT, récupérer le timestamp exact depuis maven-metadata.xml
+    if [[ "$IEL_VERSION" == *"SNAPSHOT"* ]]; then
+      MAVEN_METADATA=$(curl -u ":$TOKEN" "https://pkgs.dev.azure.com/datasabai/_packaging/hubsabai-maven/maven/v1/com/datasabai/hsb/integration-engine-light/$IEL_VERSION/maven-metadata.xml" -s 2>/dev/null)
+      IEL_JAR_VERSION=$(echo "$MAVEN_METADATA" | grep -A 2 '<classifier>runner</classifier>' | grep '<value>' | sed 's/.*<value>\(.*\)<\/value>.*/\1/' | head -1)
+    fi
     
+    # Si pas de version spéciale trouvée, utiliser la version normale
     if [ -z "$IEL_JAR_VERSION" ]; then
       IEL_JAR_VERSION="$IEL_VERSION"
     fi
@@ -304,10 +307,13 @@ if az account show >/dev/null 2>&1; then
     
     echo "✅ Latest sdk-app version: $SDK_VERSION"
     
-    # Récupérer le nom exact du fichier depuis maven-metadata.xml
-    MAVEN_METADATA=$(curl -u ":$TOKEN" "https://pkgs.dev.azure.com/datasabai/_packaging/hubsabai-maven/maven/v1/com/datasabai/hsb/sdk-app/$SDK_VERSION/maven-metadata.xml" -s 2>/dev/null)
-    SDK_JAR_VERSION=$(echo "$MAVEN_METADATA" | grep -A 2 '<classifier>runner</classifier>' | grep '<value>' | sed 's/.*<value>\(.*\)<\/value>.*/\1/' | head -1)
+    # Pour les SNAPSHOT, récupérer le timestamp exact depuis maven-metadata.xml
+    if [[ "$SDK_VERSION" == *"SNAPSHOT"* ]]; then
+      MAVEN_METADATA=$(curl -u ":$TOKEN" "https://pkgs.dev.azure.com/datasabai/_packaging/hubsabai-maven/maven/v1/com/datasabai/hsb/sdk-app/$SDK_VERSION/maven-metadata.xml" -s 2>/dev/null)
+      SDK_JAR_VERSION=$(echo "$MAVEN_METADATA" | grep -A 2 '<classifier>runner</classifier>' | grep '<value>' | sed 's/.*<value>\(.*\)<\/value>.*/\1/' | head -1)
+    fi
     
+    # Si pas de version spéciale trouvée, utiliser la version normale
     if [ -z "$SDK_JAR_VERSION" ]; then
       SDK_JAR_VERSION="$SDK_VERSION"
     fi
