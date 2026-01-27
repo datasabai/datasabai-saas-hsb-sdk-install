@@ -252,7 +252,7 @@ if az account show >/dev/null 2>&1; then
       --route-parameters feedId="$FEED_ID" packageId="$IEL_PACKAGE_ID" \
       --org https://dev.azure.com/datasabai/ \
       --api-version 7.1 \
-      --query "value[0].version" \
+      --query "value[?views[?name=='Release']].version | [0]" \
       --output tsv 2>/dev/null)
     
     echo "✅ Latest integration-engine-light version: $IEL_VERSION"
@@ -304,7 +304,7 @@ if az account show >/dev/null 2>&1; then
       --route-parameters feedId="$FEED_ID" packageId="$SDK_PACKAGE_ID" \
       --org https://dev.azure.com/datasabai/ \
       --api-version 7.1 \
-      --query "value[0].version" \
+      --query "value[?views[?name=='Release']].version | [0]" \
       --output tsv 2>/dev/null)
     
     echo "✅ Latest sdk-app version: $SDK_VERSION"
