@@ -172,7 +172,9 @@ if az artifacts --help >/dev/null 2>&1; then
   
   echo "📥 Downloading Hubsabai VS Code extension v${LATEST_VERSION}..."
   
-  TEMP_DIR=$(mktemp -d)
+  # Créer le répertoire vscode dans le projet hubsabai
+  VSCODE_DIR="$REPO_DIR/vscode"
+  mkdir -p "$VSCODE_DIR"
   
   if az artifacts universal download \
     --organization "https://dev.azure.com/datasabai/" \
@@ -181,13 +183,13 @@ if az artifacts --help >/dev/null 2>&1; then
     --feed "hubsabai-vscode" \
     --name "hubsabai-vscode-extension" \
     --version "$LATEST_VERSION" \
-    --path "$TEMP_DIR"; then
+    --path "$VSCODE_DIR"; then
     
-    echo "✅ Successfully downloaded extension v${LATEST_VERSION}"
+    echo "✅ Successfully downloaded extension v${LATEST_VERSION} to $VSCODE_DIR"
     
     # Installer l'extension VS Code si un fichier .vsix est trouvé
-    if ls "$TEMP_DIR"/*.vsix >/dev/null 2>&1; then
-      for vsix in "$TEMP_DIR"/*.vsix; do
+    if ls "$VSCODE_DIR"/*.vsix >/dev/null 2>&1; then
+      for vsix in "$VSCODE_DIR"/*.vsix; do
         echo "📦 Installing VS Code extension: $(basename "$vsix")"
         code --install-extension "$vsix" --force
       done
@@ -195,8 +197,6 @@ if az artifacts --help >/dev/null 2>&1; then
   else
     echo "⚠️ Failed to download extension v${LATEST_VERSION}"
   fi
-  
-  rm -rf "$TEMP_DIR"
 else
   echo "⚠️ Azure Artifacts CLI not available (azure-devops extension missing?)"
 fi
