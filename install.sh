@@ -226,7 +226,7 @@ fi
 echo "📦 Downloading Hubsabai JAR artifacts..."
 
 # Créer le répertoire bin dans le projet hubsabai
-BIN_DIR="$REPO_DIR/bin"
+BIN_DIR="$REPO_DIR/Bin"
 mkdir -p "$BIN_DIR"
 
 FEED_ID="a89d4db8-e3e5-4e77-b8df-e7550fcb10c6"
@@ -265,6 +265,9 @@ if az account show >/dev/null 2>&1; then
     
     if [ $? -eq 0 ]; then
       echo "✅ integration-engine-light downloaded to $BIN_DIR"
+      # Créer une copie avec le nom attendu par settings.json
+      cp "$BIN_DIR/integration-engine-light-${IEL_VERSION}-runner.jar" "$BIN_DIR/current-engine.jar"
+      echo "✅ Created current-engine.jar symlink"
     else
       echo "⚠️ Failed to download integration-engine-light"
     fi
@@ -303,6 +306,9 @@ if az account show >/dev/null 2>&1; then
     
     if [ $? -eq 0 ]; then
       echo "✅ sdk-app downloaded to $BIN_DIR"
+      # Créer une copie avec le nom attendu par settings.json
+      cp "$BIN_DIR/sdk-app-${SDK_VERSION}-runner.jar" "$BIN_DIR/current-designer.jar"
+      echo "✅ Created current-designer.jar symlink"
     else
       echo "⚠️ Failed to download sdk-app"
     fi
