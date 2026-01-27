@@ -229,78 +229,87 @@ echo "📦 Downloading Hubsabai JAR artifacts..."
 BIN_DIR="$REPO_DIR/bin"
 mkdir -p "$BIN_DIR"
 
-# Configurer Maven pour Azure Artifacts
-MAVEN_SETTINGS="$HOME/.m2/settings.xml"
-mkdir -p "$HOME/.m2"
+FEED_ID="a89d4db8-e3e5-4e77-b8df-e7550fcb10c6"
 
-# Générer un PAT (Personal Access Token) depuis Azure CLI
-AZURE_DEVOPS_PAT=$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken --output tsv)
-
-if [ -n "$AZURE_DEVOPS_PAT" ]; then
-  # Créer/Mettre à jour settings.xml avec les credentials Azure Artifacts
-  cat > "$MAVEN_SETTINGS" <<EOF
-<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
-  <servers>
-    <server>
-      <id>hubsabai-maven</id>
-      <username>datasabai</username>
-      <password>${AZURE_DEVOPS_PAT}</password>
-    </server>
-  </servers>
-  <profiles>
-    <profile>
-      <id>azure-artifacts</id>
-      <repositories>
-        <repository>
-          <id>hubsabai-maven</id>
-          <url>https://pkgs.dev.azure.com/datasabai/Hubsabai/_packaging/hubsabai-maven/maven/v1</url>
-          <releases>
-            <enabled>true</enabled>
-          </releases>
-          <snapshots>
-            <enabled>true</enabled>
-          </snapshots>
-        </repository>
-      </repositories>
-    </profile>
-  </profiles>
-  <activeProfiles>
-    <activeProfile>azure-artifacts</activeProfile>
-  </activeProfiles>
-</settings>
-EOF
-
-  echo "✅ Maven settings configured for Azure Artifacts"
+if az account show >/dev/null 2>&1; then
   
-  # Télécharger sdk-app JAR
-  echo "📥 Downloading sdk-app 1.0.0-SNAPSHOT..."
-  mvn dependency:copy -U \
-    -Dartifact=com.datasabai.hsb:sdk-app:1.0.0-SNAPSHOT \
-    -DoutputDirectory="$BIN_DIR" \
-    -s "$MAVEN_SETTINGS"
+  # Télécharger integration-engine-light (dernière version)
+  echo "📥 Fetching latest integration-engine-light version..."
+  IEL_PACKAGE_ID=$(az devops invoke \
+    --area packaging \
+    --resource packages \
+    --route-parameters project=3cfd82fb-e192-45a2-bc79-bb40b999acec feedId="$FEED_ID" protocolType=Maven packageScope=com.datasabai.hsb packageName=integration-engine-light \
+    --org https://dev.azure.com/datasabai/ \
+    --api-version 7.1 \
+    --query "id" \
+    --output tsv 2>/dev/null)
   
-  if [ $? -eq 0 ]; then
-    echo "✅ sdk-app downloaded to $BIN_DIR"
+  if [ -n "$IEL_PACKAGE_ID" ]; then
+    IEL_VERSION=$(az devops invoke \
+      --area packaging \
+      --resource versions \
+      --route-parameters project=3cfd82fb-e192-45a2-bc79-bb40b999acec feedId="$FEED_ID" packageId="$IEL_PACKAGE_ID" \
+      --org https://dev.azure.com/datasabai/ \
+      --api-version 7.1 \
+      --query "value[0].version" \
+      --output tsv 2>/dev/null)
+    
+    echo "✅ Latest integration-engine-light version: $IEL_VERSION"
+    echo "📥 Downloading integration-engine-light-${IEL_VERSION}-runner.jar..."
+    
+    curl -u ":$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken --output tsv)" \
+      "https://pkgs.dev.azure.com/datasabai/_apis/packaging/feeds/$FEED_ID/maven/com.datasabai.hsb/integration-engine-light/$IEL_VERSION/integration-engine-light-${IEL_VERSION}-runner.jar/content" \
+      -o "$BIN_DIR/integration-engine-light-${IEL_VERSION}-runner.jar" \
+      -L -s
+    
+    if [ $? -eq 0 ]; then
+      echo "✅ integration-engine-light downloaded to $BIN_DIR"
+    else
+      echo "⚠️ Failed to download integration-engine-light"
+    fi
   else
-    echo "⚠️ Failed to download sdk-app"
+    echo "⚠️ Could not find integration-engine-light package"
   fi
   
-  # Télécharger integration-engine-light JAR
-  echo "📥 Downloading integration-engine-light 1.0.1..."
-  mvn dependency:copy -U \
-    -Dartifact=com.datasabai.hsb:integration-engine-light:1.0.1 \
-    -DoutputDirectory="$BIN_DIR" \
-    -s "$MAVEN_SETTINGS"
+  # Télécharger sdk-app (dernière SNAPSHOT)
+  echo "📥 Fetching latest sdk-app SNAPSHOT..."
+  SDK_PACKAGE_ID=$(az devops invoke \
+    --area packaging \
+    --resource packages \
+    --route-parameters project=3cfd82fb-e192-45a2-bc79-bb40b999acec feedId="$FEED_ID" protocolType=Maven packageScope=com.datasabai.hsb packageName=sdk-app \
+    --org https://dev.azure.com/datasabai/ \
+    --api-version 7.1 \
+    --query "id" \
+    --output tsv 2>/dev/null)
   
-  if [ $? -eq 0 ]; then
-    echo "✅ integration-engine-light downloaded to $BIN_DIR"
+  if [ -n "$SDK_PACKAGE_ID" ]; then
+    SDK_VERSION=$(az devops invoke \
+      --area packaging \
+      --resource versions \
+      --route-parameters project=3cfd82fb-e192-45a2-bc79-bb40b999acec feedId="$FEED_ID" packageId="$SDK_PACKAGE_ID" \
+      --org https://dev.azure.com/datasabai/ \
+      --api-version 7.1 \
+      --query "value[0].normalizedVersion" \
+      --output tsv 2>/dev/null)
+    
+    echo "✅ Latest sdk-app version: $SDK_VERSION"
+    echo "📥 Downloading sdk-app-${SDK_VERSION}-runner.jar..."
+    
+    curl -u ":$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken --output tsv)" \
+      "https://pkgs.dev.azure.com/datasabai/_apis/packaging/feeds/$FEED_ID/maven/com.datasabai.hsb/sdk-app/$SDK_VERSION/sdk-app-${SDK_VERSION}-runner.jar/content" \
+      -o "$BIN_DIR/sdk-app-${SDK_VERSION}-runner.jar" \
+      -L -s
+    
+    if [ $? -eq 0 ]; then
+      echo "✅ sdk-app downloaded to $BIN_DIR"
+    else
+      echo "⚠️ Failed to download sdk-app"
+    fi
   else
-    echo "⚠️ Failed to download integration-engine-light"
+    echo "⚠️ Could not find sdk-app package"
   fi
 else
-  echo "⚠️ Could not get Azure DevOps access token for Maven"
+  echo "⚠️ Azure CLI not authenticated"
 fi
 
 echo "✅ SDK installation completed successfully"
