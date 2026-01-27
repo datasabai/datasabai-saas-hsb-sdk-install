@@ -276,7 +276,7 @@ EOF
   
   # Télécharger sdk-app JAR
   echo "📥 Downloading sdk-app 1.0.0-SNAPSHOT..."
-  mvn dependency:copy \
+  mvn dependency:copy -U \
     -Dartifact=com.datasabai.hsb:sdk-app:1.0.0-SNAPSHOT \
     -DoutputDirectory="$BIN_DIR" \
     -s "$MAVEN_SETTINGS"
@@ -289,13 +289,10 @@ EOF
   
   # Télécharger integration-engine-light JAR
   echo "📥 Downloading integration-engine-light 1.0.1..."
-  mvn dependency:copy \
+  mvn dependency:copy -U \
     -Dartifact=com.datasabai.hsb:integration-engine-light:1.0.1 \
     -DoutputDirectory="$BIN_DIR" \
-    -DremoteRepositories=hubsabai-maven::::https://pkgs.dev.azure.com/datasabai/Hubsabai/_packaging/hubsabai-maven/maven/v1 \
-    -s "$MAVEN_SETTINGS" \
-    -DremoteRepositories=hubsabai-maven::::https://pkgs.dev.azure.com/datasabai/Hubsabai/_packaging/hubsabai-maven/maven/v1 \
-    -s "$MAVEN_SETTINGS" >/dev/null 2>&1
+    -s "$MAVEN_SETTINGS"
   
   if [ $? -eq 0 ]; then
     echo "✅ integration-engine-light downloaded to $BIN_DIR"
