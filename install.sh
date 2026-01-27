@@ -238,17 +238,17 @@ if az account show >/dev/null 2>&1; then
   IEL_PACKAGE_ID=$(az devops invoke \
     --area packaging \
     --resource packages \
-    --route-parameters project=3cfd82fb-e192-45a2-bc79-bb40b999acec feedId="$FEED_ID" protocolType=Maven packageScope=com.datasabai.hsb packageName=integration-engine-light \
+    --route-parameters feedId="$FEED_ID" \
     --org https://dev.azure.com/datasabai/ \
     --api-version 7.1 \
-    --query "id" \
+    --query "value[?name=='com.datasabai.hsb:integration-engine-light'].id" \
     --output tsv 2>/dev/null)
   
   if [ -n "$IEL_PACKAGE_ID" ]; then
     IEL_VERSION=$(az devops invoke \
       --area packaging \
       --resource versions \
-      --route-parameters project=3cfd82fb-e192-45a2-bc79-bb40b999acec feedId="$FEED_ID" packageId="$IEL_PACKAGE_ID" \
+      --route-parameters feedId="$FEED_ID" packageId="$IEL_PACKAGE_ID" \
       --org https://dev.azure.com/datasabai/ \
       --api-version 7.1 \
       --query "value[0].version" \
@@ -260,7 +260,7 @@ if az account show >/dev/null 2>&1; then
     curl -u ":$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken --output tsv)" \
       "https://pkgs.dev.azure.com/datasabai/_apis/packaging/feeds/$FEED_ID/maven/com.datasabai.hsb/integration-engine-light/$IEL_VERSION/integration-engine-light-${IEL_VERSION}-runner.jar/content" \
       -o "$BIN_DIR/integration-engine-light-${IEL_VERSION}-runner.jar" \
-      -L -s
+      -L -s -f
     
     if [ $? -eq 0 ]; then
       echo "✅ integration-engine-light downloaded to $BIN_DIR"
@@ -276,17 +276,17 @@ if az account show >/dev/null 2>&1; then
   SDK_PACKAGE_ID=$(az devops invoke \
     --area packaging \
     --resource packages \
-    --route-parameters project=3cfd82fb-e192-45a2-bc79-bb40b999acec feedId="$FEED_ID" protocolType=Maven packageScope=com.datasabai.hsb packageName=sdk-app \
+    --route-parameters feedId="$FEED_ID" \
     --org https://dev.azure.com/datasabai/ \
     --api-version 7.1 \
-    --query "id" \
+    --query "value[?name=='com.datasabai.hsb:sdk-app'].id" \
     --output tsv 2>/dev/null)
   
   if [ -n "$SDK_PACKAGE_ID" ]; then
     SDK_VERSION=$(az devops invoke \
       --area packaging \
       --resource versions \
-      --route-parameters project=3cfd82fb-e192-45a2-bc79-bb40b999acec feedId="$FEED_ID" packageId="$SDK_PACKAGE_ID" \
+      --route-parameters feedId="$FEED_ID" packageId="$SDK_PACKAGE_ID" \
       --org https://dev.azure.com/datasabai/ \
       --api-version 7.1 \
       --query "value[0].normalizedVersion" \
@@ -298,7 +298,7 @@ if az account show >/dev/null 2>&1; then
     curl -u ":$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken --output tsv)" \
       "https://pkgs.dev.azure.com/datasabai/_apis/packaging/feeds/$FEED_ID/maven/com.datasabai.hsb/sdk-app/$SDK_VERSION/sdk-app-${SDK_VERSION}-runner.jar/content" \
       -o "$BIN_DIR/sdk-app-${SDK_VERSION}-runner.jar" \
-      -L -s
+      -L -s -f
     
     if [ $? -eq 0 ]; then
       echo "✅ sdk-app downloaded to $BIN_DIR"
