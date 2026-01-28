@@ -173,17 +173,17 @@ if az artifacts --help >/dev/null 2>&1; then
     --output tsv 2>&1)
   
   if [ -n "$PACKAGE_ID" ]; then
-    # Récupérer la dernière version avec le GUID
+    # Récupérer la dernière version en Release avec le GUID
     LATEST_VERSION=$(az devops invoke \
       --area packaging \
       --resource versions \
       --route-parameters project=3cfd82fb-e192-45a2-bc79-bb40b999acec feedId=hubsabai-vscode packageId="$PACKAGE_ID" \
       --org https://dev.azure.com/datasabai/ \
       --api-version 7.1 \
-      --query "value[0].version" \
+      --query "value[?views[?name=='Release']].version | [0]" \
       --output tsv 2>&1)
     
-    echo "✅ Latest version found: $LATEST_VERSION"
+    echo "✅ Latest Release version found: $LATEST_VERSION"
   else
     echo "⚠️ Could not fetch package ID, using default version: 1.3.7"
     LATEST_VERSION="1.3.7"
