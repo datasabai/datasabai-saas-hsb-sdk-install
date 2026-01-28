@@ -335,6 +335,32 @@ else
   echo "⚠️ Azure CLI not authenticated"
 fi
 
+# -------------------------
+# Set HUBSABAI_HOME environment variable
+# -------------------------
+echo "🔧 Setting HUBSABAI_HOME environment variable..."
+
+# Créer le fichier de configuration pour la variable d'environnement
+HUBSABAI_ENV_FILE="$HOME/.hubsabai_env"
+cat > "$HUBSABAI_ENV_FILE" <<EOF
+# Hubsabai SDK environment configuration
+export HUBSABAI_HOME="$REPO_DIR"
+EOF
+
+# Ajouter la source du fichier dans .bashrc s'il n'existe pas déjà
+if ! grep -q "source.*\.hubsabai_env" "$HOME/.bashrc" 2>/dev/null; then
+  echo "" >> "$HOME/.bashrc"
+  echo "# Hubsabai SDK environment" >> "$HOME/.bashrc"
+  echo "[ -f \"$HUBSABAI_ENV_FILE\" ] && source \"$HUBSABAI_ENV_FILE\"" >> "$HOME/.bashrc"
+  echo "✅ HUBSABAI_HOME added to .bashrc"
+else
+  echo "✅ HUBSABAI_HOME already configured in .bashrc"
+fi
+
+# Charger la variable pour la session courante
+export HUBSABAI_HOME="$REPO_DIR"
+echo "✅ HUBSABAI_HOME=$HUBSABAI_HOME"
+
 echo "✅ SDK installation completed successfully"
 
 # Ouvrir VS Code sur le dossier hubsabai
