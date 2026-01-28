@@ -206,12 +206,19 @@ if az artifacts --help >/dev/null 2>&1; then
     
     echo "✅ Successfully downloaded extension v${LATEST_VERSION} to $VSCODE_DIR"
     
-    # Installer l'extension VS Code si un fichier .vsix est trouvé
-    if ls "$VSCODE_DIR"/*.vsix >/dev/null 2>&1; then
-      for vsix in "$VSCODE_DIR"/*.vsix; do
-        echo "📦 Installing VS Code extension: $(basename "$vsix")"
-        code --install-extension "$vsix" --force
-      done
+    # Installer uniquement le fichier .vsix correspondant à LATEST_VERSION
+    VSIX_FILE="$VSCODE_DIR/datasabai-sdk-${LATEST_VERSION}.vsix"
+    if [ -f "$VSIX_FILE" ]; then
+      echo "📦 Installing VS Code extension: $(basename "$VSIX_FILE")"
+      code --install-extension "$VSIX_FILE" --force
+      
+      # Nettoyer les autres versions non installées
+      echo "🧹 Cleaning unused extension versions..."
+      find "$VSCODE_DIR" -name "*.vsix" ! -name "datasabai-sdk-${LATEST_VERSION}.vsix" -delete
+    else
+      echo "⚠️ Extension file not found: $VSIX_FILE"
+      echo "📋 Available files:"
+      ls -la "$VSCODE_DIR"/*.vsix 2>/dev/null || echo "No .vsix files found"
     fi
   else
     echo "⚠️ Failed to download extension v${LATEST_VERSION}"
@@ -255,6 +262,11 @@ if az account show >/dev/null 2>&1; then
       --output tsv 2>/dev/null)
     
     echo "✅ Latest integration-engine-light version: $IEL_VERSION"
+    
+    # Nettoyer les anciennes versions
+    echo "🧹 Cleaning old integration-engine-light versions..."
+    rm -f "$BIN_DIR"/integration-engine-light-*-runner.jar
+    
     echo "📥 Downloading integration-engine-light-${IEL_VERSION}-runner.jar..."
     
     curl -u ":$TOKEN" \
@@ -296,6 +308,11 @@ if az account show >/dev/null 2>&1; then
       --output tsv 2>/dev/null)
     
     echo "✅ Latest sdk-app version: $SDK_VERSION"
+    
+    # Nettoyer les anciennes versions
+    echo "🧹 Cleaning old sdk-app versions..."
+    rm -f "$BIN_DIR"/sdk-app-*-runner.jar
+    
     echo "📥 Downloading sdk-app-${SDK_VERSION}-runner.jar..."
     
     curl -u ":$TOKEN" \
