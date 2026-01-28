@@ -340,21 +340,19 @@ fi
 # -------------------------
 echo "🔧 Setting HUBSABAI_HOME environment variable..."
 
-# Créer le fichier de configuration pour la variable d'environnement
+# Toujours mettre à jour le fichier de configuration avec le nouveau répertoire
 HUBSABAI_ENV_FILE="$HOME/.hubsabai_env"
 cat > "$HUBSABAI_ENV_FILE" <<EOF
 # Hubsabai SDK environment configuration
 export HUBSABAI_HOME="$REPO_DIR"
 EOF
 
-# Ajouter la source du fichier dans .bashrc s'il n'existe pas déjà
+# Ajouter la source du fichier dans .bashrc uniquement si elle n'existe pas
 if ! grep -q "source.*\.hubsabai_env" "$HOME/.bashrc" 2>/dev/null; then
   echo "" >> "$HOME/.bashrc"
   echo "# Hubsabai SDK environment" >> "$HOME/.bashrc"
   echo "[ -f \"$HUBSABAI_ENV_FILE\" ] && source \"$HUBSABAI_ENV_FILE\"" >> "$HOME/.bashrc"
   echo "✅ HUBSABAI_HOME added to .bashrc"
-else
-  echo "✅ HUBSABAI_HOME already configured in .bashrc"
 fi
 
 # Charger la variable pour la session courante
