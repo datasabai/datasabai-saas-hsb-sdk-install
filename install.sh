@@ -27,7 +27,7 @@ fi
 # Azure login (only if needed)
 if ! az account show >/dev/null 2>&1; then
   echo "🔐 Azure authentication required"
-  az login
+  az login --allow-no-subscriptions
 else
   echo "✅ Azure already authenticated"
 fi
