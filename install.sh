@@ -65,7 +65,7 @@ if ! java -version 2>&1 | grep -q "Temurin" || ! java -version 2>&1 | grep -q "2
   sudo apt update
   sudo apt install -y wget apt-transport-https gnupg ca-certificates
 
-  # Supprimer l'ancien fichier adoptium.list et la clé s'ils existent
+  # Remove old adoptium.list file and key if they exist
   sudo rm -f /etc/apt/sources.list.d/adoptium.list
   sudo rm -f /etc/apt/keyrings/adoptium.gpg
 
@@ -103,7 +103,7 @@ else
   echo "✅ Maven $MAVEN_VERSION already installed"
 fi
 
-# Supprimer l'ancien lien symbolique et créer le nouveau
+# Remove old symbolic link and create new one
 sudo rm -f /opt/maven
 sudo ln -sf "$MAVEN_DIR" /opt/maven
 
@@ -129,20 +129,20 @@ REPO_DIR="$HOME/hubsabai"
 if [ ! -d "$REPO_DIR" ]; then
   echo "📦 Cloning Hubsabai distribution repository skeleton..."
   
-  # Configurer Git pour utiliser Azure DevOps credential helper
+  # Configure Git to use Azure DevOps credential helper
   git config --global credential.helper store
   
-  # Obtenir un token d'accès depuis Azure CLI
+  # Get access token from Azure CLI
   AZURE_DEVOPS_TOKEN=$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken --output tsv)
   
   if [ -n "$AZURE_DEVOPS_TOKEN" ]; then
-    # Cloner avec le token dans l'URL
+    # Clone with token in the URL
     git clone "https://token:${AZURE_DEVOPS_TOKEN}@dev.azure.com/datasabai/Hubsabai/_git/hubsabai-distribution" "$REPO_DIR"
     
     if [ $? -eq 0 ]; then
       echo "✅ Repository skeleton cloned successfully to $REPO_DIR"
       
-      # Supprimer le dossier .git pour désynchroniser (c'est juste un squelette)
+      # Remove .git folder to desynchronize (this is just a skeleton)
       echo "🔓 Removing Git tracking (this is a skeleton, not for commits)..."
       rm -rf "$REPO_DIR/.git"
       echo "✅ Repository desynchronized - ready for development"
@@ -157,12 +157,33 @@ else
 fi
 
 # -------------------------
+# Set HUBSABAI_HOME environment variable
+# -------------------------
+export HUBSABAI_HOME="$REPO_DIR"
+echo "✅ HUBSABAI_HOME=$HUBSABAI_HOME"
+
+# Always update configuration file with the new directory
+HUBSABAI_ENV_FILE="$HOME/.hubsabai_env"
+cat > "$HUBSABAI_ENV_FILE" <<EOF
+# Hubsabai SDK environment configuration
+export HUBSABAI_HOME="$HUBSABAI_HOME"
+EOF
+
+# Add file sourcing to .bashrc only if it doesn't exist
+if ! grep -q "source.*\.hubsabai_env" "$HOME/.bashrc" 2>/dev/null; then
+  echo "" >> "$HOME/.bashrc"
+  echo "# Hubsabai SDK environment" >> "$HOME/.bashrc"
+  echo "[ -f \"$HUBSABAI_ENV_FILE\" ] && source \"$HUBSABAI_ENV_FILE\"" >> "$HOME/.bashrc"
+  echo "✅ HUBSABAI_HOME configuration added to .bashrc"
+fi
+
+# -------------------------
 # Azure Artifacts - Hubsabai VS Code Extension
 # -------------------------
 if az artifacts --help >/dev/null 2>&1; then
   echo "📦 Fetching latest Hubsabai VS Code extension version..."
   
-  # Récupérer le GUID du package
+  # Get the package GUID
   PACKAGE_ID=$(az devops invoke \
     --area packaging \
     --resource packages \
@@ -173,7 +194,7 @@ if az artifacts --help >/dev/null 2>&1; then
     --output tsv 2>&1)
   
   if [ -n "$PACKAGE_ID" ]; then
-    # Récupérer la dernière version en Release avec le GUID
+    # Get the latest Release version with the GUID
     LATEST_VERSION=$(az devops invoke \
       --area packaging \
       --resource versions \
@@ -191,8 +212,8 @@ if az artifacts --help >/dev/null 2>&1; then
   
   echo "📥 Downloading Hubsabai VS Code extension v${LATEST_VERSION}..."
   
-  # Créer le répertoire .vscode dans le projet hubsabai
-  VSCODE_DIR="$REPO_DIR/.vscode"
+  # Create .vscode directory in the hubsabai project
+  VSCODE_DIR="$HUBSABAI_HOME/.vscode"
   mkdir -p "$VSCODE_DIR"
   
   if az artifacts universal download \
@@ -206,13 +227,13 @@ if az artifacts --help >/dev/null 2>&1; then
     
     echo "✅ Successfully downloaded extension v${LATEST_VERSION} to $VSCODE_DIR"
     
-    # Installer uniquement le fichier .vsix correspondant à LATEST_VERSION
+    # Install only the .vsix file corresponding to LATEST_VERSION
     VSIX_FILE="$VSCODE_DIR/datasabai-sdk-${LATEST_VERSION}.vsix"
     if [ -f "$VSIX_FILE" ]; then
       echo "📦 Installing VS Code extension: $(basename "$VSIX_FILE")"
       code --install-extension "$VSIX_FILE" --force
       
-      # Nettoyer les autres versions non installées
+      # Clean other unused versions
       echo "🧹 Cleaning unused extension versions..."
       find "$VSCODE_DIR" -name "*.vsix" ! -name "datasabai-sdk-${LATEST_VERSION}.vsix" -delete
     else
@@ -232,15 +253,16 @@ fi
 # -------------------------
 echo "📦 Downloading Hubsabai JAR artifacts..."
 
-# Créer le répertoire bin dans le projet hubsabai
-BIN_DIR="$REPO_DIR/bin"
+# Create bin directory in the hubsabai project
+BIN_DIR="$HUBSABAI_HOME/bin"
+mkdir -p "$BIN_DIR"
 
 FEED_ID="a89d4db8-e3e5-4e77-b8df-e7550fcb10c6"
 
 if az account show >/dev/null 2>&1; then
   TOKEN=$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken --output tsv)
   
-  # Télécharger integration-engine-light (dernière version)
+  # Download integration-engine-light (latest version)
   echo "📥 Fetching latest integration-engine-light version..."
   IEL_PACKAGE_ID=$(az devops invoke \
     --area packaging \
@@ -263,7 +285,7 @@ if az account show >/dev/null 2>&1; then
     
     echo "✅ Latest integration-engine-light version: $IEL_VERSION"
     
-    # Nettoyer les anciennes versions
+    # Clean old versions
     echo "🧹 Cleaning old integration-engine-light versions..."
     rm -f "$BIN_DIR"/integration-engine-light-*-runner.jar
     
@@ -276,7 +298,7 @@ if az account show >/dev/null 2>&1; then
     
     if [ $? -eq 0 ]; then
       echo "✅ integration-engine-light downloaded to $BIN_DIR"
-      # Créer une copie avec le nom attendu par settings.json
+      # Create a copy with the name expected by settings.json
       cp "$BIN_DIR/integration-engine-light-${IEL_VERSION}-runner.jar" "$BIN_DIR/current-engine.jar"
       echo "✅ Created current-engine.jar symlink"
     else
@@ -286,7 +308,7 @@ if az account show >/dev/null 2>&1; then
     echo "⚠️ Could not find integration-engine-light package"
   fi
   
-  # Télécharger sdk-app (dernière version)
+  # Download sdk-app (latest version)
   echo "📥 Fetching latest sdk-app version..."
   SDK_PACKAGE_ID=$(az devops invoke \
     --area packaging \
@@ -309,7 +331,7 @@ if az account show >/dev/null 2>&1; then
     
     echo "✅ Latest sdk-app version: $SDK_VERSION"
     
-    # Nettoyer les anciennes versions
+    # Clean old versions
     echo "🧹 Cleaning old sdk-app versions..."
     rm -f "$BIN_DIR"/sdk-app-*-runner.jar
     
@@ -322,7 +344,7 @@ if az account show >/dev/null 2>&1; then
     
     if [ $? -eq 0 ]; then
       echo "✅ sdk-app downloaded to $BIN_DIR"
-      # Créer une copie avec le nom attendu par settings.json
+      # Create a copy with the name expected by settings.json
       cp "$BIN_DIR/sdk-app-${SDK_VERSION}-runner.jar" "$BIN_DIR/current-designer.jar"
       echo "✅ Created current-designer.jar symlink"
     else
@@ -335,36 +357,12 @@ else
   echo "⚠️ Azure CLI not authenticated"
 fi
 
-# -------------------------
-# Set HUBSABAI_HOME environment variable
-# -------------------------
-echo "🔧 Setting HUBSABAI_HOME environment variable..."
-
-# Toujours mettre à jour le fichier de configuration avec le nouveau répertoire
-HUBSABAI_ENV_FILE="$HOME/.hubsabai_env"
-cat > "$HUBSABAI_ENV_FILE" <<EOF
-# Hubsabai SDK environment configuration
-export HUBSABAI_HOME="$REPO_DIR"
-EOF
-
-# Ajouter la source du fichier dans .bashrc uniquement si elle n'existe pas
-if ! grep -q "source.*\.hubsabai_env" "$HOME/.bashrc" 2>/dev/null; then
-  echo "" >> "$HOME/.bashrc"
-  echo "# Hubsabai SDK environment" >> "$HOME/.bashrc"
-  echo "[ -f \"$HUBSABAI_ENV_FILE\" ] && source \"$HUBSABAI_ENV_FILE\"" >> "$HOME/.bashrc"
-  echo "✅ HUBSABAI_HOME added to .bashrc"
-fi
-
-# Charger la variable pour la session courante
-export HUBSABAI_HOME="$REPO_DIR"
-echo "✅ HUBSABAI_HOME=$HUBSABAI_HOME"
-
 echo "✅ SDK installation completed successfully"
 
-# Ouvrir VS Code sur le dossier hubsabai
+# Open VS Code on the hubsabai folder
 if command -v code >/dev/null 2>&1; then
   echo "📂 Opening VS Code with hubsabai workspace..."
-  code "$REPO_DIR"
+  code "$HUBSABAI_HOME"
 else
   echo "⚠️ VS Code command 'code' not found in PATH"
 fi
